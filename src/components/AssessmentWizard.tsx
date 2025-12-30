@@ -339,13 +339,13 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Roof Type *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">Roof Type *</label>
                     <div className="grid grid-cols-2 gap-4">
                       {[
-                        { value: 'GI Sheet', label: 'GI Sheet (0.9)', color: 'from-gray-400 to-gray-500' },
-                        { value: 'Asbestos', label: 'Asbestos (0.8)', color: 'from-gray-500 to-gray-600' },
-                        { value: 'Tiles', label: 'Tiles (0.75)', color: 'from-orange-400 to-red-500' },
-                        { value: 'Concrete', label: 'Concrete (0.7)', color: 'from-gray-600 to-gray-700' },
+                        { value: 'GI Sheet', label: 'GI Sheet (0.9)', image: '/screenshot_2025-12-31_041043.png' },
+                        { value: 'Asbestos', label: 'Asbestos (0.8)', image: '/screenshot_2025-12-31_041141.png' },
+                        { value: 'Tiles', label: 'Tiles (0.75)', image: '/screenshot_2025-12-31_041244.png' },
+                        { value: 'Concrete', label: 'Concrete (0.7)', image: '/screenshot_2025-12-31_041546.png' },
                       ].map((type) => (
                         <motion.button
                           key={type.value}
@@ -353,14 +353,26 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
                           onClick={() => updateField('roofType', type.value)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`p-4 rounded-xl border-2 transition-all ${
+                          className={`relative overflow-hidden rounded-xl border-3 transition-all ${
                             formData.roofType === type.value
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300'
+                              ? 'border-blue-500 ring-4 ring-blue-200'
+                              : 'border-gray-300 hover:border-blue-400'
                           }`}
                         >
-                          <div className={`w-full h-2 rounded-full bg-gradient-to-r ${type.color} mb-2`} />
-                          <span className="text-sm font-medium">{type.label}</span>
+                          <div className="aspect-video w-full overflow-hidden">
+                            <img
+                              src={type.image}
+                              alt={type.value}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className={`p-3 text-center font-semibold ${
+                            formData.roofType === type.value
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-50 text-gray-800'
+                          }`}>
+                            {type.label}
+                          </div>
                         </motion.button>
                       ))}
                     </div>
