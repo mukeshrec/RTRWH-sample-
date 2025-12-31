@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Droplets, FileText, Calculator, Download, TrendingUp, Users, Home, Wallet, Award, LogIn, LogOut, UserCircle, ChevronDown, HelpCircle } from 'lucide-react';
+import { Droplets, FileText, Calculator, Download, TrendingUp, Users, Home, Wallet, Award, LogIn, LogOut, UserCircle, ChevronDown, HelpCircle, Building2, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AssessmentWizard from './components/AssessmentWizard';
 import ResultsDashboard from './components/ResultsDashboard';
+import GovernmentDashboard from './components/GovernmentDashboard';
+import IotDashboard from './components/IotDashboard';
 import Chatbot from './components/Chatbot';
 import AuthModal from './components/AuthModal';
 import PasswordReset from './components/PasswordReset';
@@ -16,7 +18,7 @@ import { saveProject, saveCalculationResults, supabase } from './lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'wizard' | 'results'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'wizard' | 'results' | 'government' | 'iot'>('home');
   const [assessmentData, setAssessmentData] = useState<any>(null);
   const [calculationResults, setCalculationResults] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -239,6 +241,41 @@ function App() {
             </motion.div>
 
             <div className="flex items-center gap-4">
+              {user && currentView !== 'wizard' && currentView !== 'home' && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('home')}
+                  className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium shadow-sm hover:bg-gray-200 transition-colors"
+                >
+                  Home
+                </motion.button>
+              )}
+
+              {user && (
+                <>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setCurrentView('government')}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium shadow-sm hover:bg-green-700 transition-colors"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    Government
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setCurrentView('iot')}
+                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium shadow-sm hover:bg-cyan-700 transition-colors"
+                  >
+                    <Activity className="w-4 h-4" />
+                    IoT
+                  </motion.button>
+                </>
+              )}
+
               {currentView === 'results' && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -455,7 +492,7 @@ function App() {
                   </p>
                 </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[
                     {
                       icon: Calculator,
@@ -474,6 +511,18 @@ function App() {
                       title: 'Detailed Reports',
                       gradient: 'from-green-500 to-green-600',
                       items: ['Technical specs', 'Design drawings', 'Bill of quantities', 'Implementation guide', 'O&M procedures']
+                    },
+                    {
+                      icon: Building2,
+                      title: 'Government Integration Suite',
+                      gradient: 'from-green-600 to-emerald-600',
+                      items: ['Installation tracking', 'Subsidy management', 'Compliance monitoring', 'Impact analytics', 'Policy insights']
+                    },
+                    {
+                      icon: Activity,
+                      title: 'IoT Dashboard',
+                      gradient: 'from-cyan-500 to-blue-600',
+                      items: ['Real-time monitoring', 'Water level tracking', 'Flow rate sensors', 'Quality analytics', 'Predictive alerts']
                     }
                   ].map((feature, index) => (
                     <motion.div
@@ -702,6 +751,18 @@ function App() {
                 householdSize: assessmentData.householdSize,
               }}
             />
+          </div>
+        )}
+
+        {currentView === 'government' && (
+          <div className="pt-20">
+            <GovernmentDashboard />
+          </div>
+        )}
+
+        {currentView === 'iot' && (
+          <div className="pt-20">
+            <IotDashboard />
           </div>
         )}
       </main>
