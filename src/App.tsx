@@ -216,6 +216,7 @@ function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setShowUserMenu(false);
+    setCurrentView('home');
   };
 
   if (isPasswordReset) {
@@ -333,6 +334,7 @@ function App() {
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
+                      onClick={(e) => e.stopPropagation()}
                       className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
                     >
                       <div className="p-4 border-b border-gray-200">
