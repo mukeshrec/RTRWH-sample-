@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChevronRight, ChevronLeft, Save, User, Home, Users, Cloud, CheckCircle, MapPin, Loader } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Save, User, Home, Users, Cloud, CheckCircle, MapPin, Loader, Satellite } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProjectInput } from '../lib/calculations';
+import SatelliteMap, { SiteAnalysis } from './SatelliteMap';
 
 interface AssessmentWizardProps {
   onComplete: (data: ProjectInput & {
@@ -9,13 +10,19 @@ interface AssessmentWizardProps {
     userContact: string;
     locationName: string;
     currentWaterSources?: string;
+    roofPolygon?: number[][];
+    siteAnalysis?: SiteAnalysis;
   }) => void;
 }
 
 export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [roofPolygon, setRoofPolygon] = useState<number[][]>([]);
+  const [siteAnalysis, setSiteAnalysis] = useState<SiteAnalysis | null>(null);
+  const [userLatitude, setUserLatitude] = useState<number | null>(null);
+  const [userLongitude, setUserLongitude] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     userName: '',
@@ -93,6 +100,8 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
           console.log('Location detected - State:', state);
           console.log('Location data:', locationData);
 
+          setUserLatitude(latitude);
+          setUserLongitude(longitude);
           updateField('locationName', displayLocation);
 
           if (state) {
@@ -153,6 +162,8 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
       userContact: string;
       locationName: string;
       currentWaterSources?: string;
+      roofPolygon?: number[][];
+      siteAnalysis?: SiteAnalysis;
     } = {
       userName: formData.userName,
       userContact: formData.userContact,
@@ -176,6 +187,8 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
         : undefined,
       soilType: formData.soilType || undefined,
       currentWaterSources: formData.currentWaterSources || undefined,
+      roofPolygon: roofPolygon.length > 0 ? roofPolygon : undefined,
+      siteAnalysis: siteAnalysis || undefined,
     };
 
     onComplete(data);
@@ -184,8 +197,9 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
   const steps = [
     { num: 1, title: 'Personal Info', icon: User },
     { num: 2, title: 'Property', icon: Home },
-    { num: 3, title: 'Household', icon: Users },
-    { num: 4, title: 'Site Data', icon: Cloud },
+    { num: 3, title: 'Satellite', icon: Satellite },
+    { num: 4, title: 'Household', icon: Users },
+    { num: 5, title: 'Site Data', icon: Cloud },
   ];
 
   return (
@@ -399,7 +413,60 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
                 </>
               )}
 
-              {currentStep === 3 && (
+              {currentStep === 3 && userLatitude && userLongitude && (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-4 mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <Satellite className="w-5 h-5 text-blue-600" />
+                      Measure Your Roof Area
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Use the satellite view below to trace your roof outline. This provides the most accurate measurement for your rainwater harvesting system.
+                    </p>
+                    {roofPolygon.length > 0 && (
+                      <div className="bg-white rounded-lg p-3 mt-3">
+                        <p className="text-xs text-gray-600">Satellite-measured area will be used for calculations</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <SatelliteMap
+                    latitude={userLatitude}
+                    longitude={userLongitude}
+                    onRoofAreaCalculated={(area, polygon) => {
+                      setRoofPolygon(polygon);
+                      updateField('roofArea', area.toFixed(2));
+                    }}
+                    onAnalysisComplete={(analysis) => {
+                      setSiteAnalysis(analysis);
+                    }}
+                  />
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-medium">Tip:</span> You can skip this step and enter roof area manually in the next step, but satellite measurement provides better accuracy.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 3 && (!userLatitude || !userLongitude) && (
+                <div className="text-center py-12">
+                  <Satellite className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Location Required</h3>
+                  <p className="text-gray-600 mb-6">
+                    Please detect or enter your location in Step 1 to use satellite imagery
+                  </p>
+                  <button
+                    onClick={() => setCurrentStep(1)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Go to Step 1
+                  </button>
+                </div>
+              )}
+
+              {currentStep === 4 && (
                 <>
                   <div className="relative">
                     <input
@@ -460,7 +527,7 @@ export default function AssessmentWizard({ onComplete }: AssessmentWizardProps) 
                 </>
               )}
 
-              {currentStep === 4 && (
+              {currentStep === 5 && (
                 <>
                   <div className="relative">
                     <input

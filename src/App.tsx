@@ -83,6 +83,8 @@ function App() {
       userContact: string;
       locationName: string;
       currentWaterSources?: string;
+      roofPolygon?: number[][];
+      siteAnalysis?: any;
     }
   ) => {
     const results = performCompleteCalculation(data);
@@ -133,6 +135,13 @@ function App() {
       depth_water_postmonsoon: data.depthWaterPostmonsoon,
       soil_type: data.soilType,
       infiltration_rate: data.infiltrationRate,
+      roof_polygon: data.roofPolygon,
+      elevation: data.siteAnalysis?.elevation,
+      slope: data.siteAnalysis?.slope,
+      shadow_analysis: data.siteAnalysis?.shadowAnalysis,
+      nearby_water_bodies: data.siteAnalysis?.nearbyWaterBodies,
+      site_recommendations: data.siteAnalysis?.recommendations,
+      site_warnings: data.siteAnalysis?.warnings,
     };
 
     const savedProject = await saveProject(projectData);
