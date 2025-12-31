@@ -290,7 +290,7 @@ export default function SatelliteMap({
       <MapContainer
         center={[latitude, longitude]}
         zoom={18}
-        maxZoom={22}
+        maxZoom={20}
         minZoom={3}
         style={{ height: '100%', width: '100%' }}
         zoomControl={true}
@@ -299,14 +299,16 @@ export default function SatelliteMap({
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Satellite: Esri'
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          maxZoom={22}
+          maxNativeZoom={19}
+          maxZoom={20}
         />
 
         <TileLayer
           attribution='Labels'
           url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
           opacity={0.7}
-          maxZoom={22}
+          maxNativeZoom={19}
+          maxZoom={20}
         />
 
         <Marker position={[latitude, longitude]}>
