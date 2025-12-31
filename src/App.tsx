@@ -66,12 +66,20 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await checkGovernmentUser(session.user.id);
-        } else {
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
           setIsGovernmentUser(false);
+          setAssessmentData(null);
+          setCalculationResults(null);
+          setCurrentView('home');
+        } else {
+          setUser(session?.user ?? null);
+
+          if (session?.user) {
+            await checkGovernmentUser(session.user.id);
+          } else {
+            setIsGovernmentUser(false);
+          }
         }
 
         if (event === 'PASSWORD_RECOVERY') {
@@ -214,9 +222,17 @@ function App() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setShowUserMenu(false);
-    setCurrentView('home');
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsGovernmentUser(false);
+      setShowUserMenu(false);
+      setCurrentView('home');
+      setAssessmentData(null);
+      setCalculationResults(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   if (isPasswordReset) {
