@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -85,11 +85,19 @@ export default function AssessmentWizard({
     return "Unconsolidated";
   };
 
+  // Auto-detect location when component mounts
+  useEffect(() => {
+    detectLocation();
+  }, []);
+
   const detectLocation = async () => {
+    console.log("Starting location detection...");
     setIsDetectingLocation(true);
 
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      const errorMsg = "Geolocation is not supported by your browser";
+      console.error(errorMsg);
+      alert(errorMsg);
       setIsDetectingLocation(false);
       return;
     }
@@ -99,28 +107,24 @@ export default function AssessmentWizard({
         const { latitude, longitude } = position.coords;
 
         try {
-          const reverseGeocodeResponse = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reverse-geocode`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${
-                  import.meta.env.VITE_SUPABASE_ANON_KEY
-                }`,
-              },
-              body: JSON.stringify({ latitude, longitude }),
-            }
+          // Use OpenStreetMap's Nominatim service for reverse geocoding
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`
           );
 
-          if (!reverseGeocodeResponse.ok) {
-            throw new Error("Failed to get location");
+          if (!response.ok) {
+            throw new Error("Failed to get location details");
           }
 
-          const locationData = await reverseGeocodeResponse.json();
+          const locationData = await response.json();
+          console.log("Location data:", locationData);
+
+          // Extract location details
+          const address = locationData.address || {};
+          const city = address.city || address.town || address.village || "";
+          const state = address.state || "";
           const displayLocation =
-            locationData.formatted || locationData.displayLocation || "";
-          const state = locationData.state || "";
+            [city, state].filter(Boolean).join(", ") || "Unknown location";
 
           console.log("Location detected - State:", state);
           console.log("Location data:", locationData);
@@ -165,10 +169,28 @@ export default function AssessmentWizard({
         }
       },
       (error) => {
+        let errorMessage = "Unable to detect your location. ";
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage +=
+              "Location permission was denied. Please enable it in your browser settings.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage +=
+              "Location information is unavailable. Please check your internet connection.";
+            break;
+          case error.TIMEOUT:
+            errorMessage +=
+              "The request to get your location timed out. Please try again.";
+            break;
+          default:
+            errorMessage += `An unknown error occurred (${error.message}).`;
+        }
+
         console.error("Geolocation error:", error);
-        alert(
-          "Unable to detect your location. Please ensure location permissions are enabled."
-        );
+        console.error("Error details:", errorMessage);
+        alert(errorMessage);
         setIsDetectingLocation(false);
       }
     );

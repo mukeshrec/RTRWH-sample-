@@ -1,24 +1,43 @@
-import { useState, useEffect } from 'react';
-import { Droplets, FileText, Calculator, Download, TrendingUp, Users, Home, Wallet, Award, LogIn, LogOut, UserCircle, ChevronDown, HelpCircle, Building2, Activity } from 'lucide-react';
-import { motion } from 'framer-motion';
-import AssessmentWizard from './components/AssessmentWizard';
-import ResultsDashboard from './components/ResultsDashboard';
-import GovernmentDashboard from './components/GovernmentDashboard';
-import IotDashboard from './components/IotDashboard';
-import Chatbot from './components/Chatbot';
-import AuthModal from './components/AuthModal';
-import PasswordReset from './components/PasswordReset';
-import { ProjectInput, performCompleteCalculation } from './lib/calculations';
+import { useState, useEffect } from "react";
+import {
+  Droplets,
+  FileText,
+  Calculator,
+  TrendingUp,
+  Users,
+  Home,
+  Wallet,
+  Award,
+  LogIn,
+  LogOut,
+  UserCircle,
+  ChevronDown,
+  HelpCircle,
+  Building2,
+  Activity,
+} from "lucide-react";
+import { VideoPlayer } from "./components/VideoPlayer";
+import { motion } from "framer-motion";
+import AssessmentWizard from "./components/AssessmentWizard";
+import ResultsDashboard from "./components/ResultsDashboard";
+import GovernmentDashboard from "./components/GovernmentDashboard";
+import IotDashboard from "./components/IotDashboard";
+import Chatbot from "./components/Chatbot";
+import AuthModal from "./components/AuthModal";
+import PasswordReset from "./components/PasswordReset";
+import { ProjectInput, performCompleteCalculation } from "./lib/calculations";
 import {
   calculateCostBreakdown,
   calculateAnnualBenefits,
   performEconomicAnalysis,
-} from './lib/costEstimation';
-import { saveProject, saveCalculationResults, supabase } from './lib/supabase';
-import type { User } from '@supabase/supabase-js';
+} from "./lib/costEstimation";
+import { saveProject, saveCalculationResults, supabase } from "./lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'wizard' | 'results' | 'government' | 'iot'>('home');
+  const [currentView, setCurrentView] = useState<
+    "home" | "wizard" | "results" | "government" | "iot"
+  >("home");
   const [assessmentData, setAssessmentData] = useState<any>(null);
   const [calculationResults, setCalculationResults] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -33,24 +52,24 @@ function App() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
+    const type = hashParams.get("type");
 
-    if (type === 'recovery') {
+    if (type === "recovery") {
       setIsPasswordReset(true);
     }
   }, []);
 
   const checkGovernmentUser = async (userId: string) => {
     const { data } = await supabase
-      .from('government_users')
-      .select('id')
-      .eq('user_id', userId)
+      .from("government_users")
+      .select("id")
+      .eq("user_id", userId)
       .maybeSingle();
 
     setIsGovernmentUser(!!data);
@@ -64,14 +83,16 @@ function App() {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
-        if (event === 'SIGNED_OUT') {
+        if (event === "SIGNED_OUT") {
           setUser(null);
           setIsGovernmentUser(false);
           setAssessmentData(null);
           setCalculationResults(null);
-          setCurrentView('home');
+          setCurrentView("home");
         } else {
           setUser(session?.user ?? null);
 
@@ -82,7 +103,7 @@ function App() {
           }
         }
 
-        if (event === 'PASSWORD_RECOVERY') {
+        if (event === "PASSWORD_RECOVERY") {
           setIsPasswordReset(true);
         }
       })();
@@ -96,17 +117,17 @@ function App() {
       if (showUserMenu) setShowUserMenu(false);
     };
 
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [showUserMenu]);
 
   useEffect(() => {
-    if (currentView === 'wizard' && !user) {
-      setCurrentView('home');
+    if (currentView === "wizard" && !user) {
+      setCurrentView("home");
       setIsAuthModalOpen(true);
     }
-    if (currentView === 'government' && !isGovernmentUser) {
-      setCurrentView('home');
+    if (currentView === "government" && !isGovernmentUser) {
+      setCurrentView("home");
     }
   }, [currentView, user, isGovernmentUser]);
 
@@ -131,7 +152,9 @@ function App() {
       rechargeStructureType: results.rechargeStructureType,
       rechargeStructureDepth: results.rechargeStructureDepth,
       rechargeStructureDiameter: results.rechargeStructureDiameter,
-      waterSavingsVolume: results.isFeasible ? results.waterRequired : results.waterAvailable,
+      waterSavingsVolume: results.isFeasible
+        ? results.waterRequired
+        : results.waterAvailable,
       depthWaterPremonsoon: data.depthWaterPremonsoon,
     });
 
@@ -145,7 +168,13 @@ function App() {
       depthReduction
     );
 
-    const economicAnalysis = performEconomicAnalysis(costBreakdown, annualBenefits, 20, 0.08, 0);
+    const economicAnalysis = performEconomicAnalysis(
+      costBreakdown,
+      annualBenefits,
+      20,
+      0.08,
+      0
+    );
 
     setAssessmentData({ ...data, results, costBreakdown, economicAnalysis });
     setCalculationResults({ results, costBreakdown, economicAnalysis });
@@ -208,7 +237,7 @@ function App() {
       await saveCalculationResults(resultsData);
     }
 
-    setCurrentView('results');
+    setCurrentView("results");
   };
 
   const handleNewAssessment = () => {
@@ -216,7 +245,7 @@ function App() {
       setIsAuthModalOpen(true);
       return;
     }
-    setCurrentView('wizard');
+    setCurrentView("wizard");
     setAssessmentData(null);
     setCalculationResults(null);
   };
@@ -227,11 +256,11 @@ function App() {
       setUser(null);
       setIsGovernmentUser(false);
       setShowUserMenu(false);
-      setCurrentView('home');
+      setCurrentView("home");
       setAssessmentData(null);
       setCalculationResults(null);
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -240,7 +269,7 @@ function App() {
       <PasswordReset
         onComplete={() => {
           setIsPasswordReset(false);
-          window.history.replaceState({}, document.title, '/');
+          window.history.replaceState({}, document.title, "/");
         }}
       />
     );
@@ -252,14 +281,14 @@ function App() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white shadow-md' : 'bg-white/80 backdrop-blur-md'
+          scrolled ? "bg-white shadow-md" : "bg-white/80 backdrop-blur-md"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <motion.div
               className="flex items-center cursor-pointer"
-              onClick={() => setCurrentView('home')}
+              onClick={() => setCurrentView("home")}
               whileHover={{ scale: 1.05 }}
             >
               <div className="relative">
@@ -271,21 +300,17 @@ function App() {
                 />
               </div>
               <div className="ml-3">
-                <h1 className="text-xl font-bold text-gray-800">
-                  Varun
-                </h1>
-                <p className="text-xs text-gray-600">
-                  RTRWH Assessment Tool
-                </p>
+                <h1 className="text-xl font-bold text-gray-800">Varun</h1>
+                <p className="text-xs text-gray-600">RTRWH Assessment Tool</p>
               </div>
             </motion.div>
 
             <div className="flex items-center gap-4">
-              {user && currentView !== 'wizard' && currentView !== 'home' && (
+              {user && currentView !== "wizard" && currentView !== "home" && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setCurrentView('home')}
+                  onClick={() => setCurrentView("home")}
                   className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium shadow-sm hover:bg-gray-200 transition-colors"
                 >
                   Home
@@ -298,7 +323,7 @@ function App() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => setCurrentView('government')}
+                      onClick={() => setCurrentView("government")}
                       className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium shadow-sm hover:bg-green-700 transition-colors"
                     >
                       <Building2 className="w-4 h-4" />
@@ -309,7 +334,7 @@ function App() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setCurrentView('iot')}
+                    onClick={() => setCurrentView("iot")}
                     className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium shadow-sm hover:bg-cyan-700 transition-colors"
                   >
                     <Activity className="w-4 h-4" />
@@ -318,7 +343,7 @@ function App() {
                 </>
               )}
 
-              {currentView === 'results' && (
+              {currentView === "results" && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -342,7 +367,7 @@ function App() {
                   >
                     <UserCircle className="w-5 h-5 text-gray-700" />
                     <span className="text-sm font-medium text-gray-700">
-                      {user.user_metadata?.name || user.email?.split('@')[0]}
+                      {user.user_metadata?.name || user.email?.split("@")[0]}
                     </span>
                   </motion.button>
 
@@ -355,11 +380,15 @@ function App() {
                     >
                       <div className="p-4 border-b border-gray-200">
                         <p className="text-sm font-medium text-gray-900">
-                          {user.user_metadata?.name || 'User'}
+                          {user.user_metadata?.name || "User"}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">{user.email}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {user.email}
+                        </p>
                         {user.user_metadata?.phone && (
-                          <p className="text-xs text-gray-600 mt-1">{user.user_metadata.phone}</p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {user.user_metadata.phone}
+                          </p>
                         )}
                       </div>
                       <button
@@ -392,12 +421,12 @@ function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={() => {
-          setCurrentView('wizard');
+          setCurrentView("wizard");
         }}
       />
 
       <main>
-        {currentView === 'home' && (
+        {currentView === "home" && (
           <>
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 to-blue-50">
               <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
@@ -413,14 +442,14 @@ function App() {
                     }}
                     initial={{ y: -100, opacity: 0 }}
                     animate={{
-                      y: ['0vh', '100vh'],
+                      y: ["0vh", "100vh"],
                       opacity: [0, 0.6, 0],
                     }}
                     transition={{
                       duration: 1.5 + Math.random() * 2,
                       repeat: Infinity,
                       delay: Math.random() * 5,
-                      ease: 'linear',
+                      ease: "linear",
                     }}
                   />
                 ))}
@@ -459,8 +488,9 @@ function App() {
                   transition={{ delay: 0.2, duration: 0.6 }}
                   className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed"
                 >
-                  Calculate rooftop potential, design structures, and analyze costs with precision.
-                  Following CGWB guidelines and powered by AI.
+                  Calculate rooftop potential, design structures, and analyze
+                  costs with precision. Following CGWB guidelines and powered by
+                  AI.
                 </motion.p>
 
                 <motion.button
@@ -471,7 +501,7 @@ function App() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     if (user) {
-                      setCurrentView('wizard');
+                      setCurrentView("wizard");
                     } else {
                       setIsAuthModalOpen(true);
                     }
@@ -488,10 +518,10 @@ function App() {
                   className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 text-center"
                 >
                   {[
-                    { number: '50K+', label: 'Litres Saved', Icon: Droplets },
-                    { number: '1200+', label: 'Installations', Icon: Home },
-                    { number: '₹2.5Cr', label: 'Cost Saved', Icon: Wallet },
-                    { number: '98%', label: 'Satisfaction', Icon: Award },
+                    { number: "50K+", label: "Litres Saved", Icon: Droplets },
+                    { number: "1200+", label: "Installations", Icon: Home },
+                    { number: "₹2.5Cr", label: "Cost Saved", Icon: Wallet },
+                    { number: "98%", label: "Satisfaction", Icon: Award },
                   ].map((stat, index) => (
                     <motion.div
                       key={index}
@@ -501,7 +531,9 @@ function App() {
                       className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
                     >
                       <stat.Icon className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                      <div className="text-3xl font-bold text-gray-900 mb-1">{stat.number}</div>
+                      <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {stat.number}
+                      </div>
                       <div className="text-sm text-gray-600">{stat.label}</div>
                     </motion.div>
                   ))}
@@ -519,6 +551,29 @@ function App() {
               </motion.div>
             </section>
 
+            {/* Video Section */}
+            <section className="py-12 bg-white">
+              <div className="max-w-4xl mx-auto px-4">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    See It In Action
+                  </h2>
+                  <p className="mt-2 text-gray-600">
+                    Watch how our rainwater harvesting system works
+                  </p>
+                </div>
+
+                <VideoPlayer />
+
+                <div className="mt-4 text-center text-sm text-gray-500">
+                  <p>
+                    Click on the video to play/pause. Use the button in the
+                    bottom right to toggle sound.
+                  </p>
+                </div>
+              </div>
+            </section>
+
             <section className="py-20 bg-gray-50">
               <div className="max-w-7xl mx-auto px-4">
                 <motion.div
@@ -531,7 +586,8 @@ function App() {
                     Powerful Features
                   </h2>
                   <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                    Everything you need for complete rainwater harvesting assessment
+                    Everything you need for complete rainwater harvesting
+                    assessment
                   </p>
                 </motion.div>
 
@@ -539,34 +595,64 @@ function App() {
                   {[
                     {
                       icon: Calculator,
-                      title: 'Complete Calculations',
-                      gradient: 'from-blue-500 to-blue-600',
-                      items: ['Water availability', 'Tank sizing', 'Collection design', 'Filter specs', 'Recharge structures']
+                      title: "Complete Calculations",
+                      gradient: "from-blue-500 to-blue-600",
+                      items: [
+                        "Water availability",
+                        "Tank sizing",
+                        "Collection design",
+                        "Filter specs",
+                        "Recharge structures",
+                      ],
                     },
                     {
                       icon: TrendingUp,
-                      title: 'Economic Analysis',
-                      gradient: 'from-teal-500 to-teal-600',
-                      items: ['Cost breakdown', 'B/C ratio', 'Payback period', 'NPV analysis', 'Subsidy impact']
+                      title: "Economic Analysis",
+                      gradient: "from-teal-500 to-teal-600",
+                      items: [
+                        "Cost breakdown",
+                        "B/C ratio",
+                        "Payback period",
+                        "NPV analysis",
+                        "Subsidy impact",
+                      ],
                     },
                     {
                       icon: FileText,
-                      title: 'Detailed Reports',
-                      gradient: 'from-green-500 to-green-600',
-                      items: ['Technical specs', 'Design drawings', 'Bill of quantities', 'Implementation guide', 'O&M procedures']
+                      title: "Detailed Reports",
+                      gradient: "from-green-500 to-green-600",
+                      items: [
+                        "Technical specs",
+                        "Design drawings",
+                        "Bill of quantities",
+                        "Implementation guide",
+                        "O&M procedures",
+                      ],
                     },
                     {
                       icon: Building2,
-                      title: 'Government Integration Suite',
-                      gradient: 'from-green-600 to-emerald-600',
-                      items: ['Installation tracking', 'Subsidy management', 'Compliance monitoring', 'Impact analytics', 'Policy insights']
+                      title: "Government Integration Suite",
+                      gradient: "from-green-600 to-emerald-600",
+                      items: [
+                        "Installation tracking",
+                        "Subsidy management",
+                        "Compliance monitoring",
+                        "Impact analytics",
+                        "Policy insights",
+                      ],
                     },
                     {
                       icon: Activity,
-                      title: 'IoT Dashboard',
-                      gradient: 'from-cyan-500 to-blue-600',
-                      items: ['Real-time monitoring', 'Water level tracking', 'Flow rate sensors', 'Quality analytics', 'Predictive alerts']
-                    }
+                      title: "IoT Dashboard",
+                      gradient: "from-cyan-500 to-blue-600",
+                      items: [
+                        "Real-time monitoring",
+                        "Water level tracking",
+                        "Flow rate sensors",
+                        "Quality analytics",
+                        "Predictive alerts",
+                      ],
+                    },
                   ].map((feature, index) => (
                     <motion.div
                       key={index}
@@ -577,13 +663,20 @@ function App() {
                       whileHover={{ y: -10 }}
                       className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100"
                     >
-                      <div className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                      <div
+                        className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}
+                      >
                         <feature.icon className="w-8 h-8 text-white" />
                       </div>
-                      <h3 className="text-2xl font-bold text-gray-800 mb-4">{feature.title}</h3>
+                      <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                        {feature.title}
+                      </h3>
                       <ul className="space-y-3">
                         {feature.items.map((item, i) => (
-                          <li key={i} className="flex items-center text-gray-600">
+                          <li
+                            key={i}
+                            className="flex items-center text-gray-600"
+                          >
                             <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full mr-3" />
                             {item}
                           </li>
@@ -608,7 +701,9 @@ function App() {
                   viewport={{ once: true }}
                   className="text-center mb-12"
                 >
-                  <h2 className="text-4xl md:text-5xl font-bold mb-4">CGWB Certified</h2>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                    CGWB Certified
+                  </h2>
                   <p className="text-xl text-blue-100">
                     Based on Central Ground Water Board Manual (2007)
                   </p>
@@ -625,7 +720,13 @@ function App() {
                       <Droplets className="mr-3" /> RTRWH Components
                     </h3>
                     <ul className="space-y-3">
-                      {['Catchment area (roof)', 'Collection system', 'First flush device', 'Filter unit', 'Storage tank'].map((item, i) => (
+                      {[
+                        "Catchment area (roof)",
+                        "Collection system",
+                        "First flush device",
+                        "Filter unit",
+                        "Storage tank",
+                      ].map((item, i) => (
                         <li key={i} className="flex items-center">
                           <div className="w-2 h-2 bg-teal-300 rounded-full mr-3" />
                           {item}
@@ -644,7 +745,13 @@ function App() {
                       <Users className="mr-3" /> Artificial Recharge
                     </h3>
                     <ul className="space-y-3">
-                      {['Recharge pits', 'Recharge shafts', 'Injection wells', 'Percolation tanks', 'Subsurface dykes'].map((item, i) => (
+                      {[
+                        "Recharge pits",
+                        "Recharge shafts",
+                        "Injection wells",
+                        "Percolation tanks",
+                        "Subsurface dykes",
+                      ].map((item, i) => (
                         <li key={i} className="flex items-center">
                           <div className="w-2 h-2 bg-blue-300 rounded-full mr-3" />
                           {item}
@@ -679,37 +786,49 @@ function App() {
                 <div className="space-y-4">
                   {[
                     {
-                      question: 'What is Rooftop Rainwater Harvesting (RTRWH)?',
-                      answer: 'RTRWH is a technique of collecting and storing rainwater from rooftops for later use or for recharging groundwater. It involves collecting rainwater from roof surfaces, filtering it, and either storing it in tanks or directing it to recharge structures to replenish groundwater.'
+                      question: "What is Rooftop Rainwater Harvesting (RTRWH)?",
+                      answer:
+                        "RTRWH is a technique of collecting and storing rainwater from rooftops for later use or for recharging groundwater. It involves collecting rainwater from roof surfaces, filtering it, and either storing it in tanks or directing it to recharge structures to replenish groundwater.",
                     },
                     {
-                      question: 'How much water can I save with rainwater harvesting?',
-                      answer: 'The amount depends on your roof area and local rainfall. For example, a 100 sq.m roof in an area with 1000mm annual rainfall can potentially harvest around 80,000 liters per year (accounting for losses). Our assessment tool calculates the exact potential for your specific location and roof size.'
+                      question:
+                        "How much water can I save with rainwater harvesting?",
+                      answer:
+                        "The amount depends on your roof area and local rainfall. For example, a 100 sq.m roof in an area with 1000mm annual rainfall can potentially harvest around 80,000 liters per year (accounting for losses). Our assessment tool calculates the exact potential for your specific location and roof size.",
                     },
                     {
-                      question: 'What is the typical cost of installing a rainwater harvesting system?',
-                      answer: 'Costs vary based on system size and complexity. A basic system for a residential building typically ranges from ₹50,000 to ₹2,00,000. This includes collection systems, filters, storage tanks, and recharge structures. Our tool provides a detailed cost breakdown specific to your requirements.'
+                      question:
+                        "What is the typical cost of installing a rainwater harvesting system?",
+                      answer:
+                        "Costs vary based on system size and complexity. A basic system for a residential building typically ranges from ₹50,000 to ₹2,00,000. This includes collection systems, filters, storage tanks, and recharge structures. Our tool provides a detailed cost breakdown specific to your requirements.",
                     },
                     {
-                      question: 'How long does it take to recover the investment?',
-                      answer: 'The payback period typically ranges from 5-10 years, depending on water costs in your area and the system size. Many systems show positive returns within 7-8 years through reduced water bills and increased property value. Our economic analysis calculates the exact payback period for your project.'
+                      question:
+                        "How long does it take to recover the investment?",
+                      answer:
+                        "The payback period typically ranges from 5-10 years, depending on water costs in your area and the system size. Many systems show positive returns within 7-8 years through reduced water bills and increased property value. Our economic analysis calculates the exact payback period for your project.",
                     },
                     {
-                      question: 'Is rainwater harvesting mandatory?',
-                      answer: 'Many Indian states and cities have made rainwater harvesting mandatory for buildings above certain sizes. For example, it is mandatory in Delhi, Chennai, Bangalore, and many other cities for buildings with roof areas exceeding 100-300 sq.m. Check your local building regulations for specific requirements.'
+                      question: "Is rainwater harvesting mandatory?",
+                      answer:
+                        "Many Indian states and cities have made rainwater harvesting mandatory for buildings above certain sizes. For example, it is mandatory in Delhi, Chennai, Bangalore, and many other cities for buildings with roof areas exceeding 100-300 sq.m. Check your local building regulations for specific requirements.",
                     },
                     {
-                      question: 'What maintenance is required?',
-                      answer: 'Regular maintenance includes cleaning gutters and filters (monthly during rainy season), inspecting tanks for cracks or leaks (annually), cleaning first flush devices after heavy rains, and checking recharge structures for blockages. Most maintenance tasks are simple and can be done without professional help.'
+                      question: "What maintenance is required?",
+                      answer:
+                        "Regular maintenance includes cleaning gutters and filters (monthly during rainy season), inspecting tanks for cracks or leaks (annually), cleaning first flush devices after heavy rains, and checking recharge structures for blockages. Most maintenance tasks are simple and can be done without professional help.",
                     },
                     {
-                      question: 'Can harvested rainwater be used for drinking?',
-                      answer: 'Yes, with proper filtration and treatment. The water should pass through multi-stage filtration, UV treatment, or other purification methods before drinking. Many systems are designed primarily for non-potable uses like gardening, toilet flushing, and washing, which do not require extensive treatment.'
+                      question: "Can harvested rainwater be used for drinking?",
+                      answer:
+                        "Yes, with proper filtration and treatment. The water should pass through multi-stage filtration, UV treatment, or other purification methods before drinking. Many systems are designed primarily for non-potable uses like gardening, toilet flushing, and washing, which do not require extensive treatment.",
                     },
                     {
-                      question: 'What is groundwater recharge and why is it important?',
-                      answer: 'Groundwater recharge is the process of directing rainwater into the ground to replenish aquifers. This is crucial in urban areas where concrete surfaces prevent natural percolation. Recharge helps maintain groundwater levels, prevents land subsidence, and improves water quality in aquifers.'
-                    }
+                      question:
+                        "What is groundwater recharge and why is it important?",
+                      answer:
+                        "Groundwater recharge is the process of directing rainwater into the ground to replenish aquifers. This is crucial in urban areas where concrete surfaces prevent natural percolation. Recharge helps maintain groundwater levels, prevents land subsidence, and improves water quality in aquifers.",
+                    },
                   ].map((faq, index) => (
                     <motion.div
                       key={index}
@@ -720,7 +839,9 @@ function App() {
                       className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200"
                     >
                       <button
-                        onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                        onClick={() =>
+                          setOpenFaqIndex(openFaqIndex === index ? null : index)
+                        }
                         className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-100 transition-colors"
                       >
                         <span className="text-lg font-semibold text-gray-800 pr-4">
@@ -736,7 +857,7 @@ function App() {
                       <motion.div
                         initial={false}
                         animate={{
-                          height: openFaqIndex === index ? 'auto' : 0,
+                          height: openFaqIndex === index ? "auto" : 0,
                           opacity: openFaqIndex === index ? 1 : 0,
                         }}
                         transition={{ duration: 0.3 }}
@@ -762,7 +883,8 @@ function App() {
                     Still have questions?
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Try our AI-powered chatbot for instant answers to your specific questions
+                    Try our AI-powered chatbot for instant answers to your
+                    specific questions
                   </p>
                   <div className="inline-flex items-center gap-2 text-blue-600 font-medium">
                     <HelpCircle className="w-5 h-5" />
@@ -774,13 +896,13 @@ function App() {
           </>
         )}
 
-        {currentView === 'wizard' && (
+        {currentView === "wizard" && (
           <div className="pt-24 pb-16 px-4 min-h-screen bg-gray-50">
             <AssessmentWizard onComplete={handleAssessmentComplete} />
           </div>
         )}
 
-        {currentView === 'results' && calculationResults && assessmentData && (
+        {currentView === "results" && calculationResults && assessmentData && (
           <div className="pt-24 pb-16 px-4 min-h-screen bg-gray-50">
             <ResultsDashboard
               results={calculationResults.results}
@@ -797,20 +919,20 @@ function App() {
           </div>
         )}
 
-        {currentView === 'government' && isGovernmentUser && (
+        {currentView === "government" && isGovernmentUser && (
           <div className="pt-20">
             <GovernmentDashboard />
           </div>
         )}
 
-        {currentView === 'iot' && (
+        {currentView === "iot" && (
           <div className="pt-20">
             <IotDashboard />
           </div>
         )}
       </main>
 
-      {currentView === 'home' && (
+      {currentView === "home" && (
         <footer className="bg-gradient-to-r from-blue-900 to-teal-800 text-white py-12">
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
@@ -820,7 +942,8 @@ function App() {
                   <span className="text-xl font-bold">Varun</span>
                 </div>
                 <p className="text-blue-200 text-sm">
-                  Professional rainwater harvesting assessment tool following CGWB guidelines
+                  Professional rainwater harvesting assessment tool following
+                  CGWB guidelines
                 </p>
               </div>
               <div>
@@ -835,10 +958,12 @@ function App() {
               <div>
                 <h4 className="font-bold mb-4">Certification</h4>
                 <p className="text-blue-200 text-sm">
-                  Based on CGWB Manual on Artificial Recharge of Ground Water (2007)
+                  Based on CGWB Manual on Artificial Recharge of Ground Water
+                  (2007)
                 </p>
                 <p className="text-xs mt-2 text-blue-300">
-                  Central Ground Water Board<br />
+                  Central Ground Water Board
+                  <br />
                   Ministry of Jal Shakti, Government of India
                 </p>
               </div>

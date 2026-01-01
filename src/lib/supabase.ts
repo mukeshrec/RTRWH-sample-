@@ -1,18 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+const supabaseUrl = "https://dyoyfbopdgjmubbuqifd.supabase.co";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5b3lmYm9wZGdqbXViYnVxaWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMTIxMjcsImV4cCI6MjA4MjY4ODEyN30.xmhM1MY0g2cWoJeb35_Uu2tNRTrZoAjS4_7TYojrydk";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: 'varun-auth',
+    storageKey: "varun-auth",
   },
 });
 
@@ -97,15 +94,17 @@ export interface CostData {
   description: string;
 }
 
-export async function saveProject(projectData: Partial<Project>): Promise<Project | null> {
+export async function saveProject(
+  projectData: Partial<Project>
+): Promise<Project | null> {
   const { data, error } = await supabase
-    .from('projects')
+    .from("projects")
     .insert([projectData])
     .select()
     .single();
 
   if (error) {
-    console.error('Error saving project:', error);
+    console.error("Error saving project:", error);
     return null;
   }
 
@@ -116,13 +115,13 @@ export async function saveCalculationResults(
   resultsData: Partial<CalculationResult>
 ): Promise<CalculationResult | null> {
   const { data, error } = await supabase
-    .from('calculation_results')
+    .from("calculation_results")
     .insert([resultsData])
     .select()
     .single();
 
   if (error) {
-    console.error('Error saving calculation results:', error);
+    console.error("Error saving calculation results:", error);
     return null;
   }
 
@@ -133,20 +132,20 @@ export async function getRegionalData(
   state?: string,
   district?: string
 ): Promise<RegionalData[]> {
-  let query = supabase.from('regional_data').select('*');
+  let query = supabase.from("regional_data").select("*");
 
   if (state) {
-    query = query.eq('state', state);
+    query = query.eq("state", state);
   }
 
   if (district) {
-    query = query.eq('district', district);
+    query = query.eq("district", district);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching regional data:', error);
+    console.error("Error fetching regional data:", error);
     return [];
   }
 
@@ -154,16 +153,16 @@ export async function getRegionalData(
 }
 
 export async function getCostData(category?: string): Promise<CostData[]> {
-  let query = supabase.from('cost_data').select('*');
+  let query = supabase.from("cost_data").select("*");
 
   if (category) {
-    query = query.eq('item_category', category);
+    query = query.eq("item_category", category);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching cost data:', error);
+    console.error("Error fetching cost data:", error);
     return [];
   }
 
@@ -175,26 +174,26 @@ export async function getProjectWithResults(projectId: string): Promise<{
   results: CalculationResult | null;
 }> {
   const { data: project, error: projectError } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', projectId)
+    .from("projects")
+    .select("*")
+    .eq("id", projectId)
     .maybeSingle();
 
   if (projectError) {
-    console.error('Error fetching project:', projectError);
+    console.error("Error fetching project:", projectError);
     return { project: null, results: null };
   }
 
   const { data: results, error: resultsError } = await supabase
-    .from('calculation_results')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('created_at', { ascending: false })
+    .from("calculation_results")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (resultsError) {
-    console.error('Error fetching results:', resultsError);
+    console.error("Error fetching results:", resultsError);
   }
 
   return { project, results };
@@ -202,12 +201,12 @@ export async function getProjectWithResults(projectId: string): Promise<{
 
 export async function getAllProjects(): Promise<Project[]> {
   const { data, error } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .from("projects")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching projects:', error);
+    console.error("Error fetching projects:", error);
     return [];
   }
 

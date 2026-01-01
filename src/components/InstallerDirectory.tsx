@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { Globe, Phone, MapPin, Star } from "lucide-react";
-
-// Initialize Supabase (Ensure your .env variables are set)
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from "../lib/supabase";
 
 interface Installer {
   id: number;
