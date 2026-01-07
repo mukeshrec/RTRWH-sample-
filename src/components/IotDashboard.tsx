@@ -1,133 +1,190 @@
 import { useState, useEffect } from 'react';
 import { database } from '../lib/firebase';
 import { ref, onValue, off } from 'firebase/database';
-import { Loader2, Wifi, CheckCircle, Activity } from 'lucide-react';
+import { 
+  Droplets, 
+  CloudRain, 
+  LineChart, 
+  Trophy, 
+  Activity, 
+  Wifi, 
+  RefreshCw,
+  Zap
+} from 'lucide-react';
 
 export default function IotDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
-  // The path 'iot/pit001' is used based on previous logs indicating nesting
-  const DB_PATH = 'iot/pit001'; 
+  const DB_PATH = 'iot/pit001';
 
-  const connectToESP32 = () => {
-    setIsConnecting(true);
-    
-    // Updated reference to point to the full nested path
-    const dataRef = ref(database, DB_PATH); 
-    
-    onValue(dataRef, (snapshot) => {
+  useEffect(() => {
+    const dataRef = ref(database, DB_PATH);
+    const unsubscribe = onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
-      console.log(`ESP32 Data at ${DB_PATH}:`, data); 
-      
       if (data) {
         setStats(data);
         setIsConnected(true);
-      } else {
-        console.warn(`No data found at ${DB_PATH}. Check your Firebase path.`);
+        setLastUpdated(new Date().toLocaleTimeString());
       }
-      setIsConnecting(false);
-    }, (error) => {
-      console.error("Firebase Subscription Error:", error);
-      setIsConnecting(false);
     });
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      const dataRef = ref(database, DB_PATH);
-      off(dataRef);
-    };
+    return () => off(dataRef);
   }, []);
 
-  const MetricCard = ({ title, value, unit, color = "text-black" }: any) => (
-    <div className="bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50 flex flex-col justify-between min-h-[160px] transition-all hover:shadow-md">
-      <h3 className="text-gray-700 font-bold text-lg">{title}</h3>
-      <div className="flex items-baseline gap-2 mt-4">
-        <span className={`text-4xl font-extrabold ${isConnected ? color : 'text-gray-300'}`}>
-          {isConnected && (value !== undefined && value !== null) ? value : '--'}
-        </span>
-        {unit && <span className="text-xl font-bold text-gray-400">{unit}</span>}
+  const StatusBadge = ({ status }: { status: string }) => {
+    const isNormal = status?.toLowerCase() === 'normal';
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+        isNormal ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+      }`}>
+        {status || 'Pending'}
+      </span>
+    );
+  };
+
+  const KPICard = ({ title, value, unit, icon: Icon, description, trend }: any) => (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+          <Icon size={24} />
+        </div>
+        {trend && (
+          <span className="text-emerald-500 text-xs font-bold flex items-center gap-1">
+            <Zap size={12} /> {trend}
+          </span>
+        )}
+      </div>
+      <div>
+        <p className="text-slate-500 text-sm font-medium">{title}</p>
+        <div className="flex items-baseline gap-1 mt-1">
+          <h3 className="text-2xl font-bold text-slate-900">{value ?? '--'}</h3>
+          <span className="text-slate-400 text-sm font-semibold">{unit}</span>
+        </div>
+        <p className="text-slate-400 text-xs mt-2">{description}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <nav className="flex items-center justify-between px-8 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">V</div>
-          <div>
-            <span className="font-bold text-gray-900 block leading-none">Varun</span>
-            <span className="text-[10px] text-gray-400 uppercase tracking-tighter">RTRWH Assessment Tool</span>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
+      {/* Top Professional Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+              <Droplets size={24} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold leading-none">VARUN <span className="text-blue-600">Pro</span></h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">IoT Infrastructure</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex flex-col items-end">
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <span className={isConnected ? 'text-emerald-500' : 'text-slate-300'}>
+                  {isConnected ? 'SYSTEM ONLINE' : 'SYSTEM OFFLINE'}
+                </span>
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+              </div>
+              <p className="text-[10px] text-slate-400 uppercase">Last Sync: {lastUpdated || 'Never'}</p>
+            </div>
+            <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
+              <RefreshCw size={20} />
+            </button>
+            <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden">
+               <div className="w-full h-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">MV</div>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button className="text-sm font-medium text-gray-600">Home</button>
-          <button className="bg-cyan-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2">
-            <Activity className="w-4 h-4" /> IoT
-          </button>
-          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-            <div className="w-6 h-6 bg-gray-200 rounded-full" />
-            <span className="text-sm font-medium text-gray-700">Mukesh V</span>
-          </div>
-        </div>
-      </nav>
+      </header>
 
-      <div className="bg-gradient-to-r from-[#0095ff] to-[#00d4ff] pt-20 pb-24 text-center text-white">
-        <h1 className="text-6xl font-black tracking-[0.25em] mb-4 uppercase">Varun</h1>
-        <p className="text-lg font-medium opacity-90 italic">Smart Rooftop Rainwater Harvesting Monitor</p>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-6 -mt-12">
-        <div className="flex justify-center mb-16">
-          <button 
-            onClick={connectToESP32}
-            disabled={isConnected || isConnecting}
-            className={`flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-lg shadow-xl transition-all active:scale-95 ${
-              isConnected 
-                ? 'bg-green-500 text-white cursor-default shadow-green-100' 
-                : 'bg-[#0066ff] hover:bg-blue-700 text-white'
-            }`}
-          >
-            {isConnecting ? <Loader2 className="w-6 h-6 animate-spin" /> : isConnected ? <CheckCircle className="w-6 h-6" /> : <Wifi className="w-6 h-6" />}
-            {isConnecting ? 'Searching...' : isConnected ? 'ESP32 Connected' : 'Connect ESP32'}
-          </button>
+      <main className="max-w-[1400px] mx-auto px-6 py-8">
+        {/* Dashboard Title Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-extrabold text-slate-800">RTRWH Assessment Dashboard</h2>
+          <p className="text-slate-500">Real-time monitoring for Pit ID: <span className="font-mono text-blue-600 font-bold">PIT-001</span></p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
-          <MetricCard 
+        {/* Primary Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <KPICard 
             title="Ultrasonic Level" 
             value={stats?.ultrasonic_cm} 
             unit="cm" 
+            icon={Activity}
+            description="Tank depth clearance"
+            trend="+2.4%"
           />
-          <MetricCard 
-            title="Rain Intensity (ADC)" 
+          <KPICard 
+            title="Rain Intensity" 
             value={stats?.rain_adc} 
+            unit="ADC" 
+            icon={CloudRain}
+            description="Sensor raw frequency"
           />
-          <MetricCard 
-            title="Water Saved (Today)" 
+          <KPICard 
+            title="Today's Harvest" 
             value={stats?.water_saved_today} 
-            unit="L" 
+            unit="Liters" 
+            icon={Droplets}
+            description="Daily cumulative"
           />
-          <MetricCard 
-            title="Total Water Saved" 
-            value={stats?.total_water_saved ? Number(stats.total_water_saved).toFixed(2) : null} 
-            unit="L" 
-          />
-          <MetricCard 
-            title="Pit Status" 
-            value={stats?.pit_status} 
-            color={stats?.pit_status === 'normal' ? "text-green-500" : "text-yellow-500"} 
-          />
-          <MetricCard 
-            title="Achievement" 
+          <KPICard 
+            title="Efficiency Badge" 
             value={stats?.badge} 
+            icon={Trophy}
+            description="System achievement"
           />
         </div>
-      </div>
+
+        {/* Secondary Detailed Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Detailed Status Card */}
+          <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <h4 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <Wifi size={18} className="text-blue-500" /> Device Diagnostics
+            </h4>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-500">System Status</span>
+                <StatusBadge status={stats?.pit_status} />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-500">Hardware ID</span>
+                <span className="text-sm font-mono font-bold text-slate-700">ESP32-RTRWH-V1</span>
+              </div>
+              <div className="pt-4 border-t border-slate-50">
+                <p className="text-xs text-slate-400 mb-3">TOTAL AGGREGATE SAVINGS</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-blue-600">
+                    {stats?.total_water_saved ? Number(stats.total_water_saved).toFixed(1) : '--'}
+                  </span>
+                  <span className="text-lg font-bold text-slate-400">Liters</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Placeholder for Analytics Graph */}
+          <div className="lg:col-span-2 bg-slate-900 rounded-2xl p-6 shadow-xl relative overflow-hidden text-white">
+            <div className="relative z-10">
+              <h4 className="font-bold mb-1 flex items-center gap-2 text-blue-400">
+                <LineChart size={18} /> Live Telemetry
+              </h4>
+              <p className="text-slate-400 text-xs mb-8 font-medium">Visualization of harvest efficiency over 24h</p>
+              
+              <div className="h-48 flex items-center justify-center border-2 border-dashed border-slate-700 rounded-xl">
+                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest italic">Chart Rendering Engine Ready</p>
+              </div>
+            </div>
+            {/* Visual Flare */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20" />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
